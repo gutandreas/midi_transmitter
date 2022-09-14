@@ -1,18 +1,7 @@
-import copy
-import threading
-import time
-
 import tkinter
 from tkinter import Tk, StringVar, HORIZONTAL, Scale
 from tkinter.ttk import *
-
-import midi
-import mido
-import rtmidi
-from midi.midiTypeMessage import NoteOn
-from midi.types import MidiMessageType
 from rtmidi import *
-from midi import ControlChange, ProgramChange, Message
 
 threads = []
 midiin = rtmidi.RtMidiIn()
@@ -39,6 +28,9 @@ def get_midi_devices_in():
         devices.append(midiin.getPortName(i))
 
     return devices
+
+#def update_midi_devices():
+
 
 
 def get_midi_devices_out():
@@ -116,7 +108,7 @@ def send_prg_change():
     else:
         cc = rtmidi.MidiMessage.controllerEvent(1, 0, 127)
     midiout.sendMessage(cc)
-    message = rtmidi.MidiMessage.programChange(1, (bank-1)*16+preset-1)
+    message = rtmidi.MidiMessage.programChange(1, (bank - 1) * 16 + preset - 1)
     midiout.sendMessage(message)
 
 
@@ -183,7 +175,7 @@ def reset_all_notes_in_scale():
         l.config(foreground="black")
 
 
-def stop():
+def stop(*args):
     global rec
     rec = False
 
@@ -198,19 +190,20 @@ window.title("Miditransmitter")  # setzt den Fenstertitel
 window.resizable(width=False, height=False)  # fixiert die Fenstergrösse
 window.configure(background="#ECECEC")
 window.geometry("1200x750")
-window.bind('<r>', record)
+
 
 label_device = Label(text="Gerät", width=20)
 label_preset = Label(text="Presets", width=20)
 frame_rec_buttons = Frame(window, width=200)
 button_record = Button(master=frame_rec_buttons, text="rec.", command=record, underline=0)
 button_record.pack()
-button_stop = Button(master=frame_rec_buttons, text="stop", command=stop)
+button_stop = Button(master=frame_rec_buttons, text="stop", command=stop, underline=0)
 button_stop.pack()
 
 clicked_in = StringVar()
 optionmenu_devices_in = OptionMenu(window, clicked_in, *get_midi_devices_in(), command=connect_midi_in)
 optionmenu_devices_in.config(width=30)
+#button_update = Button(command=update_midi_devices, text="Update")
 
 clicked_out = StringVar()
 optionmenu_devices_out = OptionMenu(window, clicked_out, *get_midi_devices_out(), command=connect_midi_out)
@@ -364,6 +357,7 @@ button_prgram_change.pack(side="left")
 label_device.grid(row=0, column=0)
 optionmenu_devices_in.grid(row=0, column=1)
 optionmenu_devices_out.grid(row=0, column=2)
+#button_update.grid(row=0, column=3)
 label_preset.grid(row=1, column=0)
 frame_rec_buttons.grid(row=2, column=0)
 # frame_delay.grid(row=14, column=0)
@@ -374,6 +368,11 @@ frame_program_change.grid(row=18, column=0)
 
 for i in range(11):
     note_frames[i].grid(row=i + 3, column=0, columnspan=5)
+
+# Bind
+
+window.bind('<r>', record)
+window.bind('<s>', stop)
 
 # Run the application
 window.mainloop()
