@@ -1,17 +1,22 @@
 import copy
 import threading
 import time
+
 import tkinter
 from tkinter import Tk, StringVar, HORIZONTAL, Scale
 from tkinter.ttk import *
 
+import midi
 import rtmidi
+from midi import ControlChange, ProgramChange
+from rtmidi import MidiMessage
 
 threads = []
 midiin = rtmidi.RtMidiIn()
 midiout = rtmidi.RtMidiOut()
 rec = False
 added_interval = 0
+interval_direction = 0
 
 
 def print_message(midi):
@@ -47,6 +52,9 @@ def get_intervals():
     return ["Ohne", "Kleine Sekunde", "Grosse Sekunde", "Kleine Terz", "Grosse Terz", "Quarte",
             "Tritonus", "Quinte", "Kleine Sexte", "Grosse Sexte", "Kleine Septime", "Grosse Septime"]
 
+def get_direction():
+    return ["Richtung", "Aufwärts", "Abwärts"]
+
 
 def connect_midi_in(selection):
     midiin.closePort()
@@ -77,13 +85,31 @@ def set_added_interval(interval):
             print("Verschiebung um " + str(counter) + " Halbtöne")
         counter += 1
 
-
+def set_interval_direction(direction):
+    print("Intervallrichtung: " + direction)
+    counter = -1
+    global interval_direction
+    for d in get_direction():
+        if d == direction:
+            interval_direction = counter
+        counter += 1
 
 def record(*args):
     global rec
     rec = True
     thread = threading.Thread(target=record_in_thread)
     thread.start()
+
+def send_prg_change():
+    bank = int(entry_bank.get())
+    preset = int(entry_presetnumber.get())
+    message = rtmidi.MidiMessage()
+    midiout.sendMessage(12)
+
+
+
+
+
 
 
 def record_in_thread():
@@ -95,6 +121,7 @@ def record_in_thread():
 
 
 def prepare_message(message):
+    reset_all_notes_in_scale()
     transposition = slider_transpose.get()
     print("Transposition: " + str(transposition))
     message.setNoteNumber(message.getNoteNumber() + transposition * 12)
@@ -103,8 +130,14 @@ def prepare_message(message):
     original_note = message.getNoteNumber()
 
     if added_interval != 0:
-        message.setNoteNumber(original_note + added_interval)
-        show_note_in_scale(message, "brown")
+        if interval_direction == 0:
+            message.setNoteNumber(original_note + added_interval)
+            midiout.sendMessage(message)
+            show_note_in_scale(message, "brown")
+        else:
+            message.setNoteNumber(original_note - added_interval)
+            midiout.sendMessage(message)
+            show_note_in_scale(message, "brown")
 
 
     color_added_notes = "orange"
@@ -138,6 +171,9 @@ def show_note_in_scale(message, color):
         print(number)
         notes[number].config(foreground="black")
 
+def reset_all_notes_in_scale():
+    for l in frame_notes.winfo_children():
+        l.config(foreground="black")
 
 def stop():
     global rec
@@ -297,6 +333,26 @@ label_added_interval.pack(side="left")
 clicked_intervals = StringVar()
 optionmenu_interval = OptionMenu(frame_added_interval, clicked_intervals, *get_intervals(), command=set_added_interval)
 optionmenu_interval.pack(side="left")
+clicked_up_down = StringVar()
+optionmenu_interval_up_down = OptionMenu(frame_added_interval, clicked_up_down, *get_direction(), command=set_interval_direction)
+optionmenu_interval_up_down.pack(side="left")
+
+# Program Change
+frame_program_change = Frame(window)
+label_program_change = Label(master=frame_program_change, text="Prg. Change:")
+label_program_change.pack(side="left")
+label_bank = Label(master=frame_program_change, text="Bank")
+label_bank.pack(side="left")
+entry_bank = Entry(master=frame_program_change, width=2)
+entry_bank.pack(side="left")
+label_presetnumber = Label(master=frame_program_change, text="Preset")
+label_presetnumber.pack(side="left")
+entry_presetnumber = Entry(master=frame_program_change, width=2)
+entry_presetnumber.pack(side="left")
+button_prgram_change = Button(master=frame_program_change, text="Send", command=send_prg_change)
+button_prgram_change.pack(side="left")
+
+
 
 
 
@@ -310,6 +366,7 @@ frame_rec_buttons.grid(row=2, column=0)
 frame_transpose.grid(row=15, column=0)
 frame_added_octaves.grid(row=16, column=0)
 frame_added_interval.grid(row=17, column=0)
+frame_program_change.grid(row=18, column=0)
 
 for i in range(11):
     note_frames[i].grid(row=i + 3, column=0, columnspan=5)
