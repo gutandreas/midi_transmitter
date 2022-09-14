@@ -7,9 +7,12 @@ from tkinter import Tk, StringVar, HORIZONTAL, Scale
 from tkinter.ttk import *
 
 import midi
+import mido
 import rtmidi
-from midi import ControlChange, ProgramChange
-from rtmidi import MidiMessage
+from midi.midiTypeMessage import NoteOn
+from midi.types import MidiMessageType
+from rtmidi import *
+from midi import ControlChange, ProgramChange, Message
 
 threads = []
 midiin = rtmidi.RtMidiIn()
@@ -52,6 +55,7 @@ def get_intervals():
     return ["Ohne", "Kleine Sekunde", "Grosse Sekunde", "Kleine Terz", "Grosse Terz", "Quarte",
             "Tritonus", "Quinte", "Kleine Sexte", "Grosse Sexte", "Kleine Septime", "Grosse Septime"]
 
+
 def get_direction():
     return ["Richtung", "Aufwärts", "Abwärts"]
 
@@ -75,6 +79,7 @@ def connect_midi_out(selection):
             midiout.openPort(counter)
         counter += 1
 
+
 def set_added_interval(interval):
     print("Hinzugefügtes Intervall: " + interval)
     counter = 0
@@ -85,6 +90,7 @@ def set_added_interval(interval):
             print("Verschiebung um " + str(counter) + " Halbtöne")
         counter += 1
 
+
 def set_interval_direction(direction):
     print("Intervallrichtung: " + direction)
     counter = -1
@@ -94,22 +100,24 @@ def set_interval_direction(direction):
             interval_direction = counter
         counter += 1
 
+
 def record(*args):
     global rec
     rec = True
     thread = threading.Thread(target=record_in_thread)
     thread.start()
 
+
 def send_prg_change():
     bank = int(entry_bank.get())
     preset = int(entry_presetnumber.get())
-    message = rtmidi.MidiMessage()
-    midiout.sendMessage(12)
-
-
-
-
-
+    if bank <= 8:
+        cc = rtmidi.MidiMessage.controllerEvent(1, 0, 0)
+    else:
+        cc = rtmidi.MidiMessage.controllerEvent(1, 0, 127)
+    midiout.sendMessage(cc)
+    message = rtmidi.MidiMessage.programChange(1, (bank-1)*16+preset-1)
+    midiout.sendMessage(message)
 
 
 def record_in_thread():
@@ -139,7 +147,6 @@ def prepare_message(message):
             midiout.sendMessage(message)
             show_note_in_scale(message, "brown")
 
-
     color_added_notes = "orange"
 
     if checkbox_minus_2.instate(['selected']):
@@ -160,7 +167,6 @@ def prepare_message(message):
         show_note_in_scale(message, color_added_notes)
 
 
-
 def show_note_in_scale(message, color):
     if message.isNoteOn():
         number = message.getNoteNumber()
@@ -171,9 +177,11 @@ def show_note_in_scale(message, color):
         print(number)
         notes[number].config(foreground="black")
 
+
 def reset_all_notes_in_scale():
     for l in frame_notes.winfo_children():
         l.config(foreground="black")
+
 
 def stop():
     global rec
@@ -289,7 +297,6 @@ button5 = Button(frame_presetbuttons, text=5, width=2, command=lambda: choose_pr
 button5.pack(side="left")
 buttons_preset.append(button5)
 
-
 frame_presetbuttons.grid(row=1, column=1)
 
 ports = range(midiin.getPortCount())
@@ -334,7 +341,8 @@ clicked_intervals = StringVar()
 optionmenu_interval = OptionMenu(frame_added_interval, clicked_intervals, *get_intervals(), command=set_added_interval)
 optionmenu_interval.pack(side="left")
 clicked_up_down = StringVar()
-optionmenu_interval_up_down = OptionMenu(frame_added_interval, clicked_up_down, *get_direction(), command=set_interval_direction)
+optionmenu_interval_up_down = OptionMenu(frame_added_interval, clicked_up_down, *get_direction(),
+                                         command=set_interval_direction)
 optionmenu_interval_up_down.pack(side="left")
 
 # Program Change
@@ -351,10 +359,6 @@ entry_presetnumber = Entry(master=frame_program_change, width=2)
 entry_presetnumber.pack(side="left")
 button_prgram_change = Button(master=frame_program_change, text="Send", command=send_prg_change)
 button_prgram_change.pack(side="left")
-
-
-
-
 
 # Grid
 label_device.grid(row=0, column=0)
