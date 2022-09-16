@@ -1,10 +1,9 @@
 import tkinter
-from tkinter import Tk, StringVar, HORIZONTAL, Scale, SUNKEN, DISABLED, ACTIVE, NORMAL
+from tkinter import Tk, StringVar, HORIZONTAL, Scale, SUNKEN, DISABLED, ACTIVE, NORMAL, RIDGE
 from tkinter.ttk import *
 from rtmidi import *
 from tkmacosx import Button
 from ttkthemes import ThemedTk
-
 
 threads = []
 midiin = rtmidi.RtMidiIn()
@@ -15,7 +14,6 @@ interval_direction = 0
 
 backgroundcolor = "#ECECEC"
 color_1 = "lightblue"
-
 
 
 def print_message(midi):
@@ -36,8 +34,8 @@ def get_midi_devices_in():
 
     return devices
 
-#def update_midi_devices():
 
+# def update_midi_devices():
 
 
 def get_midi_devices_out():
@@ -132,7 +130,6 @@ def record_in_thread():
 
 
 def prepare_message(message):
-    reset_all_notes_in_scale()
     transposition = slider_transpose.get()
     print("Transposition: " + str(transposition))
     message.setNoteNumber(message.getNoteNumber() + transposition * 12)
@@ -144,13 +141,13 @@ def prepare_message(message):
         if interval_direction == 0:
             message.setNoteNumber(original_note + added_interval)
             midiout.sendMessage(message)
-            show_note_in_scale(message, "brown")
+            show_note_in_scale(message, "blue")
         else:
             message.setNoteNumber(original_note - added_interval)
             midiout.sendMessage(message)
-            show_note_in_scale(message, "brown")
+            show_note_in_scale(message, "blue")
 
-    color_added_notes = "orange"
+    color_added_notes = "green"
 
     if checkbox_minus_2.instate(['selected']):
         message.setNoteNumber(original_note - 24)
@@ -174,16 +171,11 @@ def show_note_in_scale(message, color):
     if message.isNoteOn():
         number = message.getNoteNumber()
         print(number)
-        notes[number].config(foreground=color)
+        notes[number].config(foreground=color, background=color)
     if message.isNoteOff():
         number = message.getNoteNumber()
         print(number)
-        notes[number].config(foreground="black")
-
-
-def reset_all_notes_in_scale():
-    for l in frame_notes.winfo_children():
-        l.config(foreground="black")
+        notes[number].config(foreground="black", background=backgroundcolor)
 
 
 def stop(*args):
@@ -194,9 +186,9 @@ def stop(*args):
 
 
 def choose_preset(number):
-    buttons_preset[number-1].config(background="#FF9999")
+    buttons_preset[number - 1].config(background="#FF9999")
     for i in range(5):
-        if i != number-1:
+        if i != number - 1:
             buttons_preset[i].config(background="lightblue")
 
 
@@ -205,27 +197,35 @@ window = ThemedTk(theme="aqua")
 window.title("Miditransmitter")  # setzt den Fenstertitel
 window.resizable(width=False, height=False)  # fixiert die Fenstergrösse
 window.configure(background="#ECECEC")
-window.geometry("1200x750")
+window.geometry("900x400")
 
 
-label_device = Label(text="Gerät", width=20)
-label_preset = Label(text="Presets", width=20)
+
 frame_rec_buttons = Frame(window)
 button_record = Button(master=frame_rec_buttons, text="rec.", command=record, underline=0, background="lightgreen",
                        highlightbackground=backgroundcolor, state=DISABLED)
-button_record.pack()
+button_record.pack(side="left")
 button_stop = Button(master=frame_rec_buttons, text="stop", command=stop, underline=0, background="red",
                      highlightbackground=backgroundcolor, state=DISABLED)
-button_stop.pack()
+button_stop.pack(side="left")
 
+
+frame_input = Frame(window)
+label_input = Label(master=frame_input, text="Eingang")
+label_input.pack()
 clicked_in = StringVar()
-optionmenu_devices_in = OptionMenu(window, clicked_in, *get_midi_devices_in(), command=connect_midi_in)
-optionmenu_devices_in.config(width=30)
-#button_update = Button(command=update_midi_devices, text="Update")
+optionmenu_devices_in = OptionMenu(frame_input, clicked_in, *get_midi_devices_in(), command=connect_midi_in)
+optionmenu_devices_in.pack()
+optionmenu_devices_in.config(width=20)
+# button_update = Button(command=update_midi_devices, text="Update")
 
+frame_output = Frame(window)
+label_output = Label(master=frame_output, text="Ausgang")
+label_output.pack()
 clicked_out = StringVar()
-optionmenu_devices_out = OptionMenu(window, clicked_out, *get_midi_devices_out(), command=connect_midi_out)
-optionmenu_devices_out.config(width=30)
+optionmenu_devices_out = OptionMenu(frame_output, clicked_out, *get_midi_devices_out(), command=connect_midi_out)
+optionmenu_devices_out.pack()
+optionmenu_devices_out.config(width=20)
 
 notes = []
 note_names = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "h",
@@ -247,71 +247,76 @@ for i in range(11):
 
 for i in range(132):
     if i >= 0 and i < 12:
-        label = Label(note_frames[0], text=note_names[i], width=2)
+        label = Label(note_frames[0], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
     if i >= 12 and i < 24:
-        label = Label(note_frames[1], text=note_names[i], width=2)
+        label = Label(note_frames[1], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
     if i >= 24 and i < 36:
-        label = Label(note_frames[2], text=note_names[i], width=2)
+        label = Label(note_frames[2], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
     if i >= 36 and i < 48:
-        label = Label(note_frames[3], text=note_names[i], width=2)
+        label = Label(note_frames[3], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
     if i >= 48 and i < 60:
-        label = Label(note_frames[4], text=note_names[i], width=2)
+        label = Label(note_frames[4], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
     if i >= 60 and i < 72:
-        label = Label(note_frames[5], text=note_names[i], width=2)
+        label = Label(note_frames[5], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
     if i >= 72 and i < 84:
-        label = Label(note_frames[6], text=note_names[i], width=2)
+        label = Label(note_frames[6], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
     if i >= 84 and i < 96:
-        label = Label(note_frames[7], text=note_names[i], width=2)
+        label = Label(note_frames[7], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
     if i >= 96 and i < 108:
-        label = Label(note_frames[8], text=note_names[i], width=2)
+        label = Label(note_frames[8], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
     if i >= 108 and i < 120:
-        label = Label(note_frames[9], text=note_names[i], width=2)
+        label = Label(note_frames[9], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
     if i >= 120 and i < 132:
-        label = Label(note_frames[10], text=note_names[i], width=2)
+        label = Label(note_frames[10], text=note_names[i], width=3, relief=RIDGE, anchor="center", font="Helvetica 20")
         label.pack(side="left")
 
     notes.append(label)
 
 # Presets
+frame_preset_area = Frame(window)
+
+label_presets = Label(master=frame_preset_area, text="Presets:")
+label_presets.pack(side="left")
+
 buttons_preset = []
-frame_presetbuttons = Frame(window)
+frame_presetbuttons = Frame(frame_preset_area)
+frame_presetbuttons.pack(side="left")
 
 button1 = Button(frame_presetbuttons, text=1, width=50, command=lambda: choose_preset(1),
-                 highlightbackground=backgroundcolor, background="lightblue")
+                 highlightbackground=backgroundcolor, background=color_1)
 button1.pack(side="left")
 buttons_preset.append(button1)
 
 button2 = Button(frame_presetbuttons, text=2, width=50, command=lambda: choose_preset(2),
-                 highlightbackground=backgroundcolor, background="lightblue")
+                 highlightbackground=backgroundcolor, background=color_1)
 button2.pack(side="left")
 buttons_preset.append(button2)
 
 button3 = Button(frame_presetbuttons, text=3, width=50, command=lambda: choose_preset(3),
-                 highlightbackground=backgroundcolor, background="lightblue")
+                 highlightbackground=backgroundcolor, background=color_1)
 button3.pack(side="left")
 buttons_preset.append(button3)
 
 button4 = Button(frame_presetbuttons, text=4, width=50, command=lambda: choose_preset(4),
-                 highlightbackground=backgroundcolor, background="lightblue")
+                 highlightbackground=backgroundcolor, background=color_1)
 button4.pack(side="left")
 buttons_preset.append(button4)
 
 button5 = Button(frame_presetbuttons, text=5, width=50, command=lambda: choose_preset(5),
-                 highlightbackground=backgroundcolor, background="lightblue")
+                 highlightbackground=backgroundcolor, background=color_1)
 button5.pack(side="left")
 buttons_preset.append(button5)
 
-frame_presetbuttons.grid(row=1, column=1)
 
 ports = range(midiin.getPortCount())
 if ports:
@@ -331,7 +336,8 @@ entry_delay.pack(side="left")
 frame_transpose = Frame(window)
 label_transpose = Label(master=frame_transpose, text="Transponieren:")
 label_transpose.pack(side="left")
-slider_transpose = tkinter.Scale(master=frame_transpose, from_=-3, to=3, tickinterval=1, orient=HORIZONTAL, troughcolor=color_1, background=backgroundcolor)
+slider_transpose = tkinter.Scale(master=frame_transpose, from_=-3, to=3, tickinterval=1, orient=HORIZONTAL,
+                                 troughcolor=color_1, background=backgroundcolor, font="Helvetica 10")
 slider_transpose.pack(side="left")
 
 # Added Octaves
@@ -371,24 +377,25 @@ label_presetnumber = Label(master=frame_program_change, text="Preset")
 label_presetnumber.pack(side="left")
 entry_presetnumber = Entry(master=frame_program_change, width=2)
 entry_presetnumber.pack(side="left")
-button_prgram_change = Button(master=frame_program_change, text="Send", command=send_prg_change, highlightbackground=backgroundcolor)
+button_prgram_change = Button(master=frame_program_change, text="Send", command=send_prg_change,
+                              highlightbackground=backgroundcolor)
 button_prgram_change.pack(side="left")
 
 # Grid
-label_device.grid(row=0, column=0)
-optionmenu_devices_in.grid(row=0, column=1)
-optionmenu_devices_out.grid(row=0, column=2)
-#button_update.grid(row=0, column=3)
-label_preset.grid(row=1, column=0)
-frame_rec_buttons.grid(row=2, column=0)
+
+frame_input.grid(row=0, column=0)
+frame_output.grid(row=0, column=1)
+# button_update.grid(row=0, column=3)
+frame_preset_area.grid(row=3, column=2, sticky="w")
+frame_rec_buttons.grid(row=0, column=2, sticky="w")
 # frame_delay.grid(row=14, column=0)
-frame_transpose.grid(row=15, column=0)
-frame_added_octaves.grid(row=16, column=0)
-frame_added_interval.grid(row=17, column=0)
-frame_program_change.grid(row=18, column=0)
+frame_transpose.grid(row=4, column=2, rowspan=2, sticky="w")
+frame_added_octaves.grid(row=6, column=2, sticky="w")
+frame_added_interval.grid(row=7, column=2, sticky="w")
+frame_program_change.grid(row=8, column=2, sticky="w")
 
 for i in range(11):
-    note_frames[i].grid(row=i + 3, column=0, columnspan=5)
+    note_frames[i].grid(row=i + 3, column=0, columnspan=2)
 
 # Bind
 
