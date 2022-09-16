@@ -194,7 +194,10 @@ def stop(*args):
 
 
 def choose_preset(number):
-    label_chosen_preset.config(text="Preset: " + str(number))
+    buttons_preset[number-1].config(background="#FF9999")
+    for i in range(5):
+        if i != number-1:
+            buttons_preset[i].config(background="lightblue")
 
 
 # Window
@@ -209,7 +212,7 @@ label_device = Label(text="Gerät", width=20)
 label_preset = Label(text="Presets", width=20)
 frame_rec_buttons = Frame(window)
 button_record = Button(master=frame_rec_buttons, text="rec.", command=record, underline=0, background="lightgreen",
-                       highlightbackground=backgroundcolor)
+                       highlightbackground=backgroundcolor, state=DISABLED)
 button_record.pack()
 button_stop = Button(master=frame_rec_buttons, text="stop", command=stop, underline=0, background="red",
                      highlightbackground=backgroundcolor, state=DISABLED)
@@ -282,30 +285,29 @@ for i in range(132):
 # Presets
 buttons_preset = []
 frame_presetbuttons = Frame(window)
-label_chosen_preset = Label(master=frame_presetbuttons, text="Preset: -")
-label_chosen_preset.pack(side="right")
 
-button1 = Button(frame_presetbuttons, text=1, width=50, command=lambda: choose_preset(1), highlightbackground=backgroundcolor)
+button1 = Button(frame_presetbuttons, text=1, width=50, command=lambda: choose_preset(1),
+                 highlightbackground=backgroundcolor, background="lightblue")
 button1.pack(side="left")
 buttons_preset.append(button1)
 
 button2 = Button(frame_presetbuttons, text=2, width=50, command=lambda: choose_preset(2),
-                 highlightbackground=backgroundcolor)
+                 highlightbackground=backgroundcolor, background="lightblue")
 button2.pack(side="left")
 buttons_preset.append(button2)
 
 button3 = Button(frame_presetbuttons, text=3, width=50, command=lambda: choose_preset(3),
-                 highlightbackground=backgroundcolor)
+                 highlightbackground=backgroundcolor, background="lightblue")
 button3.pack(side="left")
 buttons_preset.append(button3)
 
 button4 = Button(frame_presetbuttons, text=4, width=50, command=lambda: choose_preset(4),
-                 highlightbackground=backgroundcolor)
+                 highlightbackground=backgroundcolor, background="lightblue")
 button4.pack(side="left")
 buttons_preset.append(button4)
 
 button5 = Button(frame_presetbuttons, text=5, width=50, command=lambda: choose_preset(5),
-                 highlightbackground=backgroundcolor)
+                 highlightbackground=backgroundcolor, background="lightblue")
 button5.pack(side="left")
 buttons_preset.append(button5)
 
