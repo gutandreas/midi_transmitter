@@ -1,7 +1,10 @@
 import tkinter
-from tkinter import Tk, StringVar, HORIZONTAL, Scale
+from tkinter import Tk, StringVar, HORIZONTAL, Scale, SUNKEN, DISABLED, ACTIVE, NORMAL
 from tkinter.ttk import *
 from rtmidi import *
+from tkmacosx import Button
+from ttkthemes import ThemedTk
+
 
 threads = []
 midiin = rtmidi.RtMidiIn()
@@ -9,6 +12,10 @@ midiout = rtmidi.RtMidiOut()
 rec = False
 added_interval = 0
 interval_direction = 0
+
+backgroundcolor = "#ECECEC"
+color_1 = "lightblue"
+
 
 
 def print_message(midi):
@@ -53,6 +60,7 @@ def get_direction():
 
 
 def connect_midi_in(selection):
+    stop()
     midiin.closePort()
     counter = -1
     for device in get_midi_devices_in():
@@ -63,6 +71,7 @@ def connect_midi_in(selection):
 
 
 def connect_midi_out(selection):
+    stop()
     midiout.closePort()
     counter = -1
     for device in get_midi_devices_out():
@@ -98,6 +107,8 @@ def record(*args):
     rec = True
     thread = threading.Thread(target=record_in_thread)
     thread.start()
+    button_record.config(background="grey", state=DISABLED)
+    button_stop.config(background="red", state=NORMAL)
 
 
 def send_prg_change():
@@ -178,6 +189,8 @@ def reset_all_notes_in_scale():
 def stop(*args):
     global rec
     rec = False
+    button_record.config(background="lightgreen", state=NORMAL)
+    button_stop.config(background="grey", state=DISABLED)
 
 
 def choose_preset(number):
@@ -185,7 +198,7 @@ def choose_preset(number):
 
 
 # Window
-window = Tk()  # erstellt das Fenster
+window = ThemedTk(theme="aqua")
 window.title("Miditransmitter")  # setzt den Fenstertitel
 window.resizable(width=False, height=False)  # fixiert die Fenstergrösse
 window.configure(background="#ECECEC")
@@ -194,10 +207,12 @@ window.geometry("1200x750")
 
 label_device = Label(text="Gerät", width=20)
 label_preset = Label(text="Presets", width=20)
-frame_rec_buttons = Frame(window, width=200)
-button_record = Button(master=frame_rec_buttons, text="rec.", command=record, underline=0)
+frame_rec_buttons = Frame(window)
+button_record = Button(master=frame_rec_buttons, text="rec.", command=record, underline=0, background="lightgreen",
+                       highlightbackground=backgroundcolor)
 button_record.pack()
-button_stop = Button(master=frame_rec_buttons, text="stop", command=stop, underline=0)
+button_stop = Button(master=frame_rec_buttons, text="stop", command=stop, underline=0, background="red",
+                     highlightbackground=backgroundcolor, state=DISABLED)
 button_stop.pack()
 
 clicked_in = StringVar()
@@ -270,23 +285,27 @@ frame_presetbuttons = Frame(window)
 label_chosen_preset = Label(master=frame_presetbuttons, text="Preset: -")
 label_chosen_preset.pack(side="right")
 
-button1 = Button(frame_presetbuttons, text=1, width=2, command=lambda: choose_preset(1))
+button1 = Button(frame_presetbuttons, text=1, width=50, command=lambda: choose_preset(1), highlightbackground=backgroundcolor)
 button1.pack(side="left")
 buttons_preset.append(button1)
 
-button2 = Button(frame_presetbuttons, text=2, width=2, command=lambda: choose_preset(2))
+button2 = Button(frame_presetbuttons, text=2, width=50, command=lambda: choose_preset(2),
+                 highlightbackground=backgroundcolor)
 button2.pack(side="left")
 buttons_preset.append(button2)
 
-button3 = Button(frame_presetbuttons, text=3, width=2, command=lambda: choose_preset(3))
+button3 = Button(frame_presetbuttons, text=3, width=50, command=lambda: choose_preset(3),
+                 highlightbackground=backgroundcolor)
 button3.pack(side="left")
 buttons_preset.append(button3)
 
-button4 = Button(frame_presetbuttons, text=4, width=2, command=lambda: choose_preset(4))
+button4 = Button(frame_presetbuttons, text=4, width=50, command=lambda: choose_preset(4),
+                 highlightbackground=backgroundcolor)
 button4.pack(side="left")
 buttons_preset.append(button4)
 
-button5 = Button(frame_presetbuttons, text=5, width=2, command=lambda: choose_preset(5))
+button5 = Button(frame_presetbuttons, text=5, width=50, command=lambda: choose_preset(5),
+                 highlightbackground=backgroundcolor)
 button5.pack(side="left")
 buttons_preset.append(button5)
 
@@ -310,7 +329,7 @@ entry_delay.pack(side="left")
 frame_transpose = Frame(window)
 label_transpose = Label(master=frame_transpose, text="Transponieren:")
 label_transpose.pack(side="left")
-slider_transpose = tkinter.Scale(master=frame_transpose, from_=-3, to=3, tickinterval=1, orient=HORIZONTAL)
+slider_transpose = tkinter.Scale(master=frame_transpose, from_=-3, to=3, tickinterval=1, orient=HORIZONTAL, troughcolor=color_1, background=backgroundcolor)
 slider_transpose.pack(side="left")
 
 # Added Octaves
@@ -350,7 +369,7 @@ label_presetnumber = Label(master=frame_program_change, text="Preset")
 label_presetnumber.pack(side="left")
 entry_presetnumber = Entry(master=frame_program_change, width=2)
 entry_presetnumber.pack(side="left")
-button_prgram_change = Button(master=frame_program_change, text="Send", command=send_prg_change)
+button_prgram_change = Button(master=frame_program_change, text="Send", command=send_prg_change, highlightbackground=backgroundcolor)
 button_prgram_change.pack(side="left")
 
 # Grid
