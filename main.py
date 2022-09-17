@@ -18,7 +18,7 @@ backgroundcolor = "#ECECEC"
 color_1 = "lightblue"
 
 dur_distances = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23]
-moll_distances = [0, 2, 3, 5, 7, 8, 10]
+moll_distances = [0, 2, 3, 5, 7, 8, 10, 12, 14, 15, 17, 19, 20, 22]
 
 
 def print_message(midi):
@@ -181,43 +181,8 @@ def prepare_message(message):
             midiout.sendMessage(message)
             show_note_in_scale(message, "blue")
     else:
-        number_in_c = message.getNoteNumber() % 12
-        print("number in c: ", number_in_c)
-        delta = 0
-        if chosen_tonart == "C-Dur":
-            delta = 0
-        if chosen_tonart == "G-Dur":
-            delta = 5
-        if chosen_tonart == "D-Dur":
-            delta = 10
-        if chosen_tonart == "A-Dur":
-            delta = 3
-        if chosen_tonart == "H-Dur":
-            delta = 1
-        if chosen_tonart == "Fis-Dur":
-            delta = 6
-        if chosen_tonart == "F-Dur":
-            delta = 7
-        if chosen_tonart == "B-Dur":
-            delta = 2
-        if chosen_tonart == "Es-Dur":
-            delta = 9
-        if chosen_tonart == "As-Dur":
-            delta = 4
-        if chosen_tonart == "Des-Dur":
-            delta = 11
-        if chosen_tonart == "Ges-Dur":
-            delta = 6
+        _send_interval_tonal(original_note, message)
 
-
-        number_in_scale = (number_in_c + delta) % 12
-        print("number in scale: ", number_in_scale)
-        if (number_in_scale in dur_distances):
-            index = dur_distances.index(number_in_scale)
-            difference = dur_distances[index + added_interval_tonal] - dur_distances[index]
-            message.setNoteNumber(original_note + difference)
-            midiout.sendMessage(message)
-            show_note_in_scale(message, "purple")
 
     color_added_notes = "green"
 
@@ -238,6 +203,79 @@ def prepare_message(message):
         midiout.sendMessage(message)
         show_note_in_scale(message, color_added_notes)
 
+def _send_interval_tonal(original_note, message):
+    number_in_c = message.getNoteNumber() % 12
+    number_in_a = (message.getNoteNumber() + 3) % 12
+    print("number in c: ", number_in_c)
+    print("number in a: ", number_in_a)
+    delta = 0
+    scale = dur_distances
+    tonart_reference = number_in_c
+    if chosen_tonart == "C-Dur":
+        delta = 0
+    elif chosen_tonart == "G-Dur":
+        delta = 5
+    elif chosen_tonart == "D-Dur":
+        delta = 10
+    elif chosen_tonart == "A-Dur":
+        delta = 3
+    elif chosen_tonart == "H-Dur":
+        delta = 1
+    elif chosen_tonart == "E-Dur":
+        delta = 8
+    elif chosen_tonart == "Fis-Dur":
+        delta = 6
+    elif chosen_tonart == "F-Dur":
+        delta = 7
+    elif chosen_tonart == "B-Dur":
+        delta = 2
+    elif chosen_tonart == "Es-Dur":
+        delta = 9
+    elif chosen_tonart == "As-Dur":
+        delta = 4
+    elif chosen_tonart == "Des-Dur":
+        delta = 11
+    elif chosen_tonart == "Ges-Dur":
+        delta = 6
+    else:
+        scale = moll_distances
+        tonart_reference = number_in_a
+        if chosen_tonart == "a-moll":
+            delta = 0
+        if chosen_tonart == "e-moll":
+            delta = 5
+        if chosen_tonart == "h-moll":
+            delta = 10
+        if chosen_tonart == "fis-moll":
+            delta = 3
+        if chosen_tonart == "cis-moll":
+            delta = 8
+        if chosen_tonart == "gis-moll":
+            delta = 1
+        if chosen_tonart == "dis-moll":
+            delta = 6
+        if chosen_tonart == "d-moll":
+            delta = 7
+        if chosen_tonart == "g-moll":
+            delta = 2
+        if chosen_tonart == "c-moll":
+            delta = 9
+        if chosen_tonart == "f-moll":
+            delta = 4
+        if chosen_tonart == "b-moll":
+            delta = 11
+        if chosen_tonart == "des-moll":
+            delta = 8
+
+
+    number_in_scale = (tonart_reference + delta) % 12
+    print("number in scale: ", number_in_scale)
+    if (number_in_scale in scale):
+        index = scale.index(number_in_scale)
+        difference = scale[index + added_interval_tonal] - scale[index]
+        message.setNoteNumber(original_note + difference)
+        midiout.sendMessage(message)
+        show_note_in_scale(message, "purple")
 
 def show_note_in_scale(message, color):
     if message.isNoteOn():
