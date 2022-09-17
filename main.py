@@ -4,6 +4,7 @@ from tkinter.ttk import *
 from rtmidi import *
 from tkmacosx import Button
 from ttkthemes import ThemedTk
+import metronome
 
 threads = []
 midiin = rtmidi.RtMidiIn()
@@ -13,6 +14,7 @@ added_interval_absolute = 0
 added_interval_tonal = 0
 interval_direction = 0
 chosen_tonart = "Keine"
+chosen_measure = "1"
 
 backgroundcolor = "#ECECEC"
 color_1 = "lightblue"
@@ -301,6 +303,26 @@ def choose_preset(number):
         if i != number - 1:
             buttons_preset[i].config(background="lightblue")
 
+def set_measure(measure):
+    global chosen_measure
+    chosen_measure = measure
+
+def get_measures():
+    return ["Takt", "1", "2", "3", "4"]
+
+def start_metronome():
+    if 0 < int(tempo.get()) < 1000:
+        button_metronom_start.configure(state=DISABLED)
+        button_metronom_stop.configure(state=NORMAL)
+        metronome.start(int(tempo.get()), int(chosen_measure))
+    else:
+        print("Ungültiges Tempo")
+
+def stop_metronome():
+    button_metronom_start.configure(state=NORMAL)
+    button_metronom_stop.configure(state=DISABLED)
+    metronome.stop()
+
 
 # Window
 window = ThemedTk(theme="aqua")
@@ -508,6 +530,25 @@ entry_presetnumber.pack(side="left")
 button_prgram_change = Button(master=frame_program_change, text="Send", command=send_prg_change,
                               highlightbackground=backgroundcolor)
 button_prgram_change.pack(side="left")
+
+
+# Metronom
+frame_metronome = Frame(frame_setting_area, padding=3)
+frame_metronome.pack(anchor="w")
+label_metronome = Label(master=frame_metronome, text="Metronom:", font=("Helvetica", 15, "bold"))
+label_metronome.pack(side="left")
+tempo = StringVar(window)
+entry_tempo = Entry(master=frame_metronome, width=3, textvariable=tempo)
+entry_tempo.pack(side="left")
+clicked_metronome = StringVar()
+optionmenu_metronome = OptionMenu(frame_metronome, clicked_metronome, *get_measures(), command=set_measure)
+optionmenu_metronome.pack(side="left")
+button_metronom_start = Button(master=frame_metronome, text="Start", command=start_metronome,
+                               highlightbackground=backgroundcolor, background="lightgreen")
+button_metronom_start.pack(side="left")
+button_metronom_stop = Button(master=frame_metronome, text="Stop", command=stop_metronome,
+                              highlightbackground=backgroundcolor, background="#FF9999", state=DISABLED)
+button_metronom_stop.pack(side="left")
 
 # Grid
 
