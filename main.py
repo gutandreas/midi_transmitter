@@ -274,8 +274,12 @@ def _send_interval_tonal(original_note, message):
     print("number in scale: ", number_in_scale)
     if (number_in_scale in scale):
         index = scale.index(number_in_scale)
-        difference = scale[index + added_interval_tonal] - scale[index]
-        message.setNoteNumber(original_note + difference)
+        if interval_direction == 0:
+            difference = scale[index + added_interval_tonal] - scale[index]
+            message.setNoteNumber(original_note + difference)
+        else:
+            difference = (scale[index] - scale[index - added_interval_tonal]) % 12
+            message.setNoteNumber(original_note - difference)
         midiout.sendMessage(message)
         show_note_in_scale(message, "purple")
 
