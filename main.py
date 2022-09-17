@@ -54,8 +54,8 @@ def get_midi_devices_out():
 
 
 def get_intervals_absolute():
-    return ["Ohne", "Kleine Sekunde", "Grosse Sekunde", "Kleine Terz", "Grosse Terz", "Quarte",
-            "Tritonus", "Quinte", "Kleine Sexte", "Grosse Sexte", "Kleine Septime", "Grosse Septime"]
+    return ["Ohne", "Kleine Sekunde", "Grosse Sekunde", "Kleine Terz", "Grosse Terz", "Reine Quarte",
+            "Tritonus", "Reine Quinte", "Kleine Sexte", "Grosse Sexte", "Kleine Septime", "Grosse Septime"]
 
 
 def get_intervals_tonal():
@@ -188,6 +188,27 @@ def prepare_message(message):
             delta = 0
         if chosen_tonart == "G-Dur":
             delta = 5
+        if chosen_tonart == "D-Dur":
+            delta = 10
+        if chosen_tonart == "A-Dur":
+            delta = 3
+        if chosen_tonart == "H-Dur":
+            delta = 1
+        if chosen_tonart == "Fis-Dur":
+            delta = 6
+        if chosen_tonart == "F-Dur":
+            delta = 7
+        if chosen_tonart == "B-Dur":
+            delta = 2
+        if chosen_tonart == "Es-Dur":
+            delta = 9
+        if chosen_tonart == "As-Dur":
+            delta = 4
+        if chosen_tonart == "Des-Dur":
+            delta = 11
+        if chosen_tonart == "Ges-Dur":
+            delta = 6
+
 
         number_in_scale = (number_in_c + delta) % 12
         print("number in scale: ", number_in_scale)
