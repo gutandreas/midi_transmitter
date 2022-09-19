@@ -302,7 +302,19 @@ def stop(*args):
 
 
 def choose_preset(number):
-    buttons_preset[number - 1].config(background="#FF9999")
+    buttons_preset[number - 1].config(background="#FFFF66")
+
+    if number == 1:
+        pass
+    if number == 2:
+        pass
+    if number == 3:
+        pass
+    if number == 4:
+        pass
+    if number == 5:
+        pass
+
     for i in range(5):
         if i != number - 1:
             buttons_preset[i].config(background="lightblue")
@@ -338,10 +350,10 @@ window.geometry("900x450")
 frame_rec_buttons = Frame(window, padding=10)
 label_record = Label(master=frame_rec_buttons, text="Verbindung", font=("Helvetica", 15, "bold"))
 label_record.pack()
-button_record = Button(master=frame_rec_buttons, text="rec.", command=record, underline=0, background="lightgreen",
+button_record = Button(master=frame_rec_buttons, text="Rec.", command=record, underline=0, background="lightgreen",
                        highlightbackground=backgroundcolor, state=DISABLED)
 button_record.pack(side="left", anchor="center")
-button_stop = Button(master=frame_rec_buttons, text="stop", command=stop, underline=0, background="red",
+button_stop = Button(master=frame_rec_buttons, text="Stop", command=stop, underline=0, background="red",
                      highlightbackground=backgroundcolor, state=DISABLED)
 button_stop.pack(side="left", anchor="center")
 
@@ -525,11 +537,13 @@ label_program_change = Label(master=frame_program_change, text="Prg. Change:", f
 label_program_change.pack(side="left")
 label_bank = Label(master=frame_program_change, text="Bank")
 label_bank.pack(side="left")
-entry_bank = Entry(master=frame_program_change, width=2)
+entry_bank = Spinbox(frame_program_change, from_=1, to=16, width=2, command=send_prg_change)
+entry_bank.set(1)
 entry_bank.pack(side="left")
 label_presetnumber = Label(master=frame_program_change, text="Preset")
 label_presetnumber.pack(side="left")
-entry_presetnumber = Entry(master=frame_program_change, width=2)
+entry_presetnumber = Spinbox(frame_program_change, from_=1, to=16, width=2, command=send_prg_change)
+entry_presetnumber.set(1)
 entry_presetnumber.pack(side="left")
 button_prgram_change = Button(master=frame_program_change, text="Send", command=send_prg_change,
                               highlightbackground=backgroundcolor)
@@ -542,10 +556,12 @@ frame_metronome.pack(anchor="w")
 label_metronome = Label(master=frame_metronome, text="Metronom:", font=("Helvetica", 15, "bold"))
 label_metronome.pack(side="left")
 tempo = StringVar(window)
-entry_tempo = Entry(master=frame_metronome, width=3, textvariable=tempo)
+tempo.set(120)
+entry_tempo = Spinbox(frame_metronome, textvariable=tempo, from_=40, to=250, width=3)
 entry_tempo.pack(side="left")
 clicked_metronome = StringVar()
 optionmenu_metronome = OptionMenu(frame_metronome, clicked_metronome, *get_measures(), command=set_measure)
+optionmenu_metronome.config(width=3)
 optionmenu_metronome.pack(side="left")
 button_metronom_start = Button(master=frame_metronome, text="Start", command=start_metronome,
                                highlightbackground=backgroundcolor, background="lightgreen")
@@ -555,7 +571,6 @@ button_metronom_stop = Button(master=frame_metronome, text="Stop", command=stop_
 button_metronom_stop.pack(side="left")
 
 # Grid
-
 frame_input.grid(row=0, column=0)
 frame_output.grid(row=0, column=1)
 frame_rec_buttons.grid(row=0, column=2)
@@ -567,9 +582,11 @@ frame_notes_area.grid(row=2, column=0, columnspan=2)
 
 
 # Bind
+window.bind_all("<r>", lambda event: button_record.invoke())
+window.bind_all("<s>", lambda event: button_stop.invoke())
+window.bind_all("<space>", lambda event: button_metronom_start.invoke())
+window.bind_all("<BackSpace>", lambda event: button_metronom_stop.invoke())
 
-window.bind('<r>', record)
-window.bind('<s>', stop)
 
 # Run the application
 window.mainloop()
