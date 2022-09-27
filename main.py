@@ -1,3 +1,4 @@
+import json
 import tkinter
 from tkinter import Tk, StringVar, HORIZONTAL, Scale, SUNKEN, DISABLED, ACTIVE, NORMAL, RIDGE
 from tkinter.ttk import *
@@ -5,6 +6,7 @@ from rtmidi import *
 from tkmacosx import Button
 from ttkthemes import ThemedTk
 import metronome
+import file_reader
 
 threads = []
 midiin = rtmidi.RtMidiIn()
@@ -15,12 +17,17 @@ added_interval_tonal = 0
 interval_direction = 0
 chosen_tonart = "Keine"
 chosen_measure = "1"
+chosen_preset = 0
 
 backgroundcolor = "#ECECEC"
 color_1 = "lightblue"
 
 dur_distances = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23]
 moll_distances = [0, 2, 3, 5, 7, 8, 10, 12, 14, 15, 17, 19, 20, 22]
+
+
+def load_presets():
+    file_reader.print_settings()
 
 
 def print_message(midi):
@@ -145,6 +152,15 @@ def record(*args):
     button_stop.config(background="red", state=NORMAL)
 
 
+def record_in_thread():
+    while rec:
+        m = midiin.getMessage(10)  # some timeout in ms
+        if m:
+            print(m.getTimeStamp())
+            print_message(m)
+            prepare_message(m)
+
+
 def send_prg_change():
     bank = int(entry_bank.get())
     preset = int(entry_presetnumber.get())
@@ -157,12 +173,19 @@ def send_prg_change():
     midiout.sendMessage(message)
 
 
-def record_in_thread():
-    while rec:
-        m = midiin.getMessage(10)  # some timeout in ms
-        if m:
-            print_message(m)
-            prepare_message(m)
+def reset_all_settings():
+    slider_transpose.set(0)
+    checkbox_minus_2.state(['!selected'])
+    checkbox_minus_1.state(['!selected'])
+    checkbox_plus_1.state(['!selected'])
+    checkbox_plus_2.state(['!selected'])
+    clicked_tonart.set("Keine")
+    clicked_intervals.set("Ohne")
+    clicked_up_down.set("Richtung")
+    global added_interval_tonal, added_interval_absolute, interval_direction
+    added_interval_tonal = 0
+    added_interval_absolute = 0
+    interval_direction = 0
 
 
 def prepare_message(message):
@@ -185,7 +208,6 @@ def prepare_message(message):
     else:
         _send_interval_tonal(original_note, message)
 
-
     color_added_notes = "green"
 
     if checkbox_minus_2.instate(['selected']):
@@ -204,6 +226,7 @@ def prepare_message(message):
         message.setNoteNumber(original_note + 24)
         midiout.sendMessage(message)
         show_note_in_scale(message, color_added_notes)
+
 
 def _send_interval_tonal(original_note, message):
     number_in_c = message.getNoteNumber() % 12
@@ -269,7 +292,6 @@ def _send_interval_tonal(original_note, message):
         if chosen_tonart == "des-moll":
             delta = 8
 
-
     number_in_scale = (tonart_reference + delta) % 12
     print("number in scale: ", number_in_scale)
     if (number_in_scale in scale):
@@ -283,6 +305,7 @@ def _send_interval_tonal(original_note, message):
         midiout.sendMessage(message)
         show_note_in_scale(message, "purple")
 
+
 def show_note_in_scale(message, color):
     if message.isNoteOn():
         number = message.getNoteNumber()
@@ -293,6 +316,9 @@ def show_note_in_scale(message, color):
         print(number)
         notes[number].config(foreground="black", background=backgroundcolor)
 
+def clear_all_notes_in_scale():
+    for i in range(127):
+        notes[i].config(foreground="black", background=backgroundcolor)
 
 def stop(*args):
     global rec
@@ -302,29 +328,119 @@ def stop(*args):
 
 
 def choose_preset(number):
+    #clear_all_notes_in_scale()
     buttons_preset[number - 1].config(background="#FFFF66")
 
-    if number == 1:
-        pass
-    if number == 2:
-        pass
-    if number == 3:
-        pass
-    if number == 4:
-        pass
-    if number == 5:
-        pass
+    global chosen_preset
+    chosen_preset = number
+
+    settings = json.loads(file_reader.load_settings(number - 1))
+    slider_transpose.set(settings['transpose'])
+    entry_bank.set(settings['bank'])
+    entry_presetnumber.set(settings['preset'])
+    clicked_tonart.set(settings['tonart'])
+    if settings['minus_2'] == ['selected']:
+        checkbox_minus_2.state(['selected'])
+    else:
+        checkbox_minus_2.state(['!selected'])
+
+    if settings['minus_1'] == ['selected']:
+        checkbox_minus_1.state(['selected'])
+    else:
+        checkbox_minus_1.state(['!selected'])
+
+    if settings['plus_1'] == ['selected']:
+        checkbox_plus_1.state(['selected'])
+    else:
+        checkbox_plus_1.state(['!selected'])
+
+    if settings['plus_2'] == ['selected']:
+        checkbox_plus_2.state(['selected'])
+    else:
+        checkbox_plus_2.state(['!selected'])
+
+    global interval_direction, chosen_tonart
+    interval_direction = settings['interval_direction']
+    if interval_direction == 0:
+        clicked_up_down.set("Aufwärts")
+    else:
+        clicked_up_down.set("Abwärts")
+
+    chosen_tonart = settings['tonart']
+
+    if settings['tonart'] == 'Keine':
+        print("Test")
+        global added_interval_absolute
+        added_interval_absolute = settings['interval_absolute_number']
+        if settings['interval_absolute_number'] == 1:
+            clicked_intervals.set("Kleine Sekunde")
+        if settings['interval_absolute_number'] == 2:
+            clicked_intervals.set("Grosse Sekunde")
+        if settings['interval_absolute_number'] == 3:
+            clicked_intervals.set("Kleine Terz")
+        if settings['interval_absolute_number'] == 4:
+            clicked_intervals.set("Grosse Terz")
+        if settings['interval_absolute_number'] == 5:
+            clicked_intervals.set("Reine Quarte")
+        if settings['interval_absolute_number'] == 6:
+            clicked_intervals.set("Tritonus")
+        if settings['interval_absolute_number'] == 7:
+            clicked_intervals.set("Reine Quinte")
+        if settings['interval_absolute_number'] == 8:
+            clicked_intervals.set("Kleine Sexte")
+        if settings['interval_absolute_number'] == 9:
+            clicked_intervals.set("Grosse Sexte")
+        if settings['interval_absolute_number'] == 10:
+            clicked_intervals.set("Kleine Septime")
+        if settings['interval_absolute_number'] == 11:
+            clicked_intervals.set("Grosse Septime")
+    else:
+        global added_interval_tonal
+        added_interval_tonal = settings['interval_tonal_number']
+        if settings['interval_tonal_number'] == 1:
+            clicked_intervals.set("Sekunde")
+        if settings['interval_tonal_number'] == 2:
+            clicked_intervals.set("Terz")
+        if settings['interval_tonal_number'] == 3:
+            clicked_intervals.set("Quarte")
+        if settings['interval_tonal_number'] == 4:
+            clicked_intervals.set("Quinte")
+        if settings['interval_tonal_number'] == 5:
+            clicked_intervals.set("Sexte")
+        if settings['interval_tonal_number'] == 6:
+            clicked_intervals.set("Septime")
 
     for i in range(5):
         if i != number - 1:
             buttons_preset[i].config(background="lightblue")
 
+
+def save_preset():
+    if chosen_preset != 0:
+        dict = {"transpose": slider_transpose.get(),
+                "bank": int(entry_bank.get()),
+                "preset": int(entry_presetnumber.get()),
+                "tonart": chosen_tonart,
+                "minus_2": checkbox_minus_2.state(),
+                "minus_1": checkbox_minus_1.state(),
+                "plus_1": checkbox_plus_1.state(),
+                "plus_2": checkbox_plus_2.state(),
+                "interval_tonal": added_interval_tonal,
+                "interval_absolute_number": added_interval_absolute,
+                "interval_tonal_number": added_interval_tonal,
+                "interval_direction": interval_direction
+                }
+        file_reader.save_settings(dict, chosen_preset - 1)
+
+
 def set_measure(measure):
     global chosen_measure
     chosen_measure = measure
 
+
 def get_measures():
     return ["Takt", "1", "2", "3", "4"]
+
 
 def start_metronome():
     if 0 < int(tempo.get()) < 1000:
@@ -333,6 +449,7 @@ def start_metronome():
         metronome.start(int(tempo.get()), int(chosen_measure))
     else:
         print("Ungültiges Tempo")
+
 
 def stop_metronome():
     button_metronom_start.configure(state=NORMAL)
@@ -470,6 +587,11 @@ button5 = Button(frame_presetbuttons, text=5, width=50, command=lambda: choose_p
 button5.pack(side="left")
 buttons_preset.append(button5)
 
+button_save = Button(frame_presetbuttons, text="Save", width=50, command=save_preset,
+                     highlightbackground=backgroundcolor, background="#FF9999")
+button_save.pack(side="left")
+buttons_preset.append(button5)
+
 ports = range(midiin.getPortCount())
 if ports:
     for i in ports:
@@ -501,6 +623,7 @@ label_added_octaves.pack(side="left")
 checkbox_minus_2 = Checkbutton(master=frame_added_octaves, text="-2")
 checkbox_minus_2.pack(side="left")
 checkbox_minus_1 = Checkbutton(master=frame_added_octaves, text="-1")
+checkbox_minus_1.state(['!selected'])
 checkbox_minus_1.pack(side="left")
 checkbox_plus_1 = Checkbutton(master=frame_added_octaves, text="+1")
 checkbox_plus_1.pack(side="left")
@@ -549,7 +672,6 @@ button_prgram_change = Button(master=frame_program_change, text="Send", command=
                               highlightbackground=backgroundcolor)
 button_prgram_change.pack(side="left")
 
-
 # Metronom
 frame_metronome = Frame(frame_setting_area, padding=3)
 frame_metronome.pack(anchor="w")
@@ -570,6 +692,12 @@ button_metronom_stop = Button(master=frame_metronome, text="Stop", command=stop_
                               highlightbackground=backgroundcolor, background="#FF9999", state=DISABLED)
 button_metronom_stop.pack(side="left")
 
+# Reset all
+reset_frame = Frame(frame_setting_area, padding=3)
+button_reset_all = Button(reset_frame, text="Reset all", command=reset_all_settings)
+button_reset_all.pack(side="left")
+reset_frame.pack()
+
 # Grid
 frame_input.grid(row=0, column=0)
 frame_output.grid(row=0, column=1)
@@ -586,7 +714,6 @@ window.bind_all("<r>", lambda event: button_record.invoke())
 window.bind_all("<s>", lambda event: button_stop.invoke())
 window.bind_all("<space>", lambda event: button_metronom_start.invoke())
 window.bind_all("<BackSpace>", lambda event: button_metronom_stop.invoke())
-
 
 # Run the application
 window.mainloop()
